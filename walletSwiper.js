@@ -11,6 +11,7 @@ const json = require("./privkeys.json");
 const transferHash = web3.utils.sha3("Transfer(address,address,uint256)");
 
 const test = async () => {
+  console.log("Script started succesfully! \n")
   let subscription = web3.eth
     .subscribe("logs", { topics: [transferHash] }, function(error, result) {})
     .on("data", async function(log) {
