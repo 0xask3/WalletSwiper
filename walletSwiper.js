@@ -3,18 +3,24 @@ const Web3 = require("web3");
 const IERC20 = require("./abi/IERC20.json");
 const Provider = require("@truffle/hdwallet-provider");
 
-const RPC = process.env.BSCTESTNET;
-const web3 = new Web3(RPC);
 const receiverWallet = "0x5C0E8981c2Ab6C57D6aCf037cFeE1E6619cEE5d5"; //Change main wallet here
 const json = require("./privkeys.json");
 
-const transferHash = web3.utils.sha3("Transfer(address,address,uint256)");
+let subscription;
+const startTime = performance.now();
 
 const test = async () => {
-  console.log("Script started succesfully! \n")
-  let subscription = web3.eth
-    .subscribe("logs", { topics: [transferHash] }, function(error, result) {})
-    .on("data", async function(log) {
+  let date = new Date();
+  let currTime = performance.now();
+  console.log("Script refreshed at: " + date);
+  console.log("Total run time : " + msToTime(currTime - startTime) + " seconds \n");
+  const RPC = process.env.BSCTESTNET;
+  const web3 = new Web3(RPC);
+  const transferHash = web3.utils.sha3("Transfer(address,address,uint256)");
+
+  subscription = web3.eth
+    .subscribe("logs", { topics: [transferHash] }, function (error, result) {})
+    .on("data", async function (log) {
       let fromAddress = web3.utils.toChecksumAddress(
         web3.utils.toHex(log.topics[1].slice(26))
       );
@@ -40,17 +46,43 @@ const test = async () => {
         console.log("To             : " + toAddress + "\n");
 
         console.log("Sending to main wallet: " + receiverWallet + "\n");
-
         try {
           let receipt = await tokenInstance.methods
             .transfer(receiverWallet, bal)
-            .send({ from: toAddress });
+            .send({ from: toAddress, gasLimit: 5e6 }); //5 mil gas limit
           console.log("Transferred to main wallet!!");
           console.log("Hash           : " + receipt.transactionHash);
           console.log("Amount         : " + bal);
-          console.log("Current block  : " + receipt.blockNumber);
-        } catch {}
+          console.log("Current block  : " + receipt.blockNumber + "\n");
+        } catch (e) {
+          console.log(e);
+        }
       }
     });
 };
+
 test();
+setInterval(async () => {
+  await subscription.unsubscribe(function (error, success) {
+    if (success) {
+      console.log("Successfully unsubscribed to previous subscription! \n");
+    }
+    if (error) {
+      console.log(error);
+    }
+  });
+  test();
+}, 5 * 60 * 1e3);
+
+function msToTime(duration) {
+  var milliseconds = Math.floor((duration % 1000) / 100),
+    seconds = Math.floor((duration / 1000) % 60),
+    minutes = Math.floor((duration / (1000 * 60)) % 60),
+    hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  hours = (hours < 10) ? "0" + hours : hours;
+  minutes = (minutes < 10) ? "0" + minutes : minutes;
+  seconds = (seconds < 10) ? "0" + seconds : seconds;
+
+  return hours + "H:" + minutes + "M:" + seconds + "S";
+}
