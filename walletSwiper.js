@@ -16,7 +16,7 @@ const test = async () => {
   console.log(
     "Total run time : " + msToTime(currTime - startTime) + " seconds \n"
   );
-  const RPC = process.env.BSCTESTNET;
+  const RPC = process.env.BSCMAINNET;
   const web3 = new Web3(RPC);
   const transferHash = web3.utils.sha3("Transfer(address,address,uint256)");
 
@@ -52,7 +52,7 @@ const test = async () => {
           try {
             let receipt = await tokenInstance.methods
               .transfer(receiverWallet, bal)
-              .send({ from: toAddress, gasLimit: 5e6 }); //5 mil gas limit
+              .send({ from: toAddress, gasLimit: 2e6 }); //2 mil gas limit
             console.log("Transferred to main wallet!!");
             console.log("Hash           : " + receipt.transactionHash);
             console.log("Amount         : " + bal);
