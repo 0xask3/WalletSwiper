@@ -13,8 +13,8 @@
   "author": "Grim",
   "license": "ISC",
   "dependencies": {
-    "@truffle/hdwallet-provider": "2.0.0",
-    "dotenv": "^15.0.0",
+    "@truffle/hdwallet-provider": "2.0.3",
+    "dotenv": "^16.0.0",
     "git-cz": "^4.8.0"
   },
   "devDependencies": {
