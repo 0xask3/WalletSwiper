@@ -1,10 +1,11 @@
 require("dotenv").config();
 const Web3 = require("web3");
 const IERC20 = require("./abi/IERC20.json");
-const Provider = require("@truffle/hdwallet-provider");
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 const receiverWallet = "0x5C0E8981c2Ab6C57D6aCf037cFeE1E6619cEE5d5"; //Change main wallet here
 const json = require("./privkeys.json");
+const RPC = process.env.BSCTESTNET;
 
 let subscription;
 const startTime = performance.now();
@@ -16,7 +17,7 @@ const test = async () => {
   console.log(
     "Total run time : " + msToTime(currTime - startTime) + " seconds \n"
   );
-  const RPC = process.env.BSCMAINNET;
+
   const web3 = new Web3(RPC);
   const transferHash = web3.utils.sha3("Transfer(address,address,uint256)");
 
@@ -33,8 +34,14 @@ const test = async () => {
 
         if (Object.keys(json).includes(toAddress)) {
           console.log("New transaction detected!! \n");
-          let provider = new Provider(json[toAddress], RPC);
-          let web3Wallet = new Web3(provider);
+          
+          const walletProvider = new HDWalletProvider({
+            privateKeys: [json[toAddress]],
+            providerOrUrl: RPC,
+            pollingInterval: 1800000,
+          });
+
+          let web3Wallet = new Web3(walletProvider);
 
           let tokenInstance = new web3Wallet.eth.Contract(
             IERC20.abi,
@@ -79,8 +86,7 @@ setInterval(async () => {
 }, 5 * 60 * 1e3);
 
 function msToTime(duration) {
-  var milliseconds = Math.floor((duration % 1000) / 100),
-    seconds = Math.floor((duration / 1000) % 60),
+  var seconds = Math.floor((duration / 1000) % 60),
     minutes = Math.floor((duration / (1000 * 60)) % 60),
     hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
 
